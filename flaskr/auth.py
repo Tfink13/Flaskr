@@ -82,3 +82,18 @@ def login():
     # Once id is stored in the session, it is available on subsequent requests
     # once logged in there information should be loaded
     return render_template('auth/login.html')
+
+
+# registers a function that runs before the view function
+#  no matter what URL is requested
+@bp.before_app_request
+# checks to see if id had been stored in the session and gets user data
+def load_logged_in_user():
+    user_id = session.get('user_id')
+
+    if user_id is None:
+        g.user = None
+    else:
+        g.user = get_db().execute(
+            'SELECT * FROM user WHERE id = ?', (user_id,)
+        ).fetchone()
