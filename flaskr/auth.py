@@ -50,3 +50,35 @@ def register():
         flash(error)
 
     return render_template('auth/register.html')
+
+
+#  majority is the same from registration
+#  minor differences
+@bp.route('/login', methods=('GET', 'POST'))
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        db = get_db()
+        error = None
+        user = db.execute(
+            'SELECT * FROM user WHERE username = ?', (username,)
+        ).fetchone()
+
+        if user is None:
+            error = 'Incorrect username.'
+        #  checking if hashed password from registration matches the one inputed
+        elif not check_password_hash(user['password'], password):
+            error = 'Incorrect password.'
+
+        if error is None:
+            # session is a dict that stores data across requests
+            session.clear()
+            # when validation is a success the user's id is stored in a new session
+            session['user_id'] = user['id']
+            return redirect(url_for('index'))
+
+        flash(error)
+    # Once id is stored in the session, it is available on subsequent requests
+    # once logged in there information should be loaded
+    return render_template('auth/login.html')
